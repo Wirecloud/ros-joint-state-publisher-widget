@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<widget xmlns="http://wirecloud.conwet.fi.upm.es/ns/macdescription/1" vendor="CoNWeT" name="ros-joint-state-publisher" version="0.1.0">
+  <details>
+    <title>Joint State Publisher</title>
+    <homepage>https://github.com/Wirecloud/ros-joint-state-publisher-widget</homepage>
+    <authors>Jaime Pajuelo</authors>
+    <email>jpajuelo@conwet.com</email>
+    <image></image>
+    <smartphoneimage></smartphoneimage>
+    <description>The best project ever.</description>
+    <longdescription>DESCRIPTION.md</longdescription>
+    <changelog>doc/changelog.md</changelog>
+    <doc>doc/index.md</doc>
+    <license>Apache-2.0</license>
+    <issuetracker>https://github.com/Wirecloud/ros-joint-state-publisher-widget/issues</issuetracker>
+  </details>
+  <requirements></requirements>
+  <preferences>
+    <preference name="ros_bridge_url" type="text" label="ROS Bridge URL" description="URL of the ROS Bridge v2.0 server (See http://wiki.ros.org/rosbridge_suite for more info)" default="ws://130.206.123.60:9090"/>
+  </preferences>
+  <wiring></wiring>
+  <contents src="index.html"/>
+  <rendering height="30%" width="30%"/>
+</widget>
