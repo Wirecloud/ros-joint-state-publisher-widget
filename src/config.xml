@@ -17,6 +17,7 @@
   <requirements></requirements>
   <preferences>
     <preference name="ros_bridge_url" type="text" label="ROS Bridge URL" description="URL of the ROS Bridge v2.0 server (See http://wiki.ros.org/rosbridge_suite for more info)" default="ws://130.206.123.60:9090"/>
+    <preference name="topic_name" type="text" label="Topic Name" description="Topic to use for publishing joint state changes" default="/joint_states"/>
   </preferences>
   <wiring></wiring>
   <contents src="index.html"/>

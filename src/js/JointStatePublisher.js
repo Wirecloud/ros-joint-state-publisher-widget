@@ -8,7 +8,7 @@
 
 /* globals ROSLIB */
 
-(function () {
+(function (mp) {
 
     "use strict";
 
@@ -53,8 +53,21 @@
             values[ values.length ] = parseFloat(slider.value);
         }
 
+        var currentTime = new Date();
+        var secs = Math.floor(currentTime.getTime() / 1000);
+        var nsecs = Math.round(1000000000 * (currentTime.getTime() / 1000 - secs));
         var js = new ROSLIB.Message({
-            name: names, position: values, velocity: [], effort: []
+            header: {
+                stamp: {
+                    secs: secs,
+                    nsecs: nsecs
+                },
+                frame_id: ''
+            },
+            name: names,
+            position: values,
+            velocity: [],
+            effort: []
         });
         this.topic.publish(js);
     };
@@ -63,7 +76,7 @@
         var name = event.target.name;
         var target;
         if (name.indexOf('_text') >= 0) {
-            target = name.replace('_text', '');
+            target = name.replace('_text', '_slider');
         } else {
             target = name + '_text';
         }
@@ -132,16 +145,15 @@
 
     window.onload = function () {
 
-        var ros_bridge_url = MashupPlatform.prefs.get('ros_bridge_url');
-
         var ros = new ROSLIB.Ros({
-            url: ros_bridge_url
+            url: mp.prefs.get('ros_bridge_url')
         });
 
         new JointStatePublisher({
             ros: ros,
-            divID: 'sliders'
+            divID: 'sliders',
+            topicName: mp.prefs.get('topic_name')
         });
     };
 
-})();
+})(MashupPlatform);
