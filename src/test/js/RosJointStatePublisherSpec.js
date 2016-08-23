@@ -2,17 +2,6 @@
 (function () {
     "use strict";
 
-    jasmine.getFixtures().fixturesPath = 'src/test/fixtures/';
-
-    var dependencyList = [
-        'script',
-        'div',
-    ];
-
-    var clearDocument = function clearDocument() {
-        $('body > *:not(' + dependencyList.join(', ') + ')').remove();
-    };
-
     describe("Test RosJointStatePublisher", function () {
         var widget;
         beforeAll(function () {
@@ -20,8 +9,6 @@
         });
 
         beforeEach(function () {
-            MashupPlatform.reset();
-            widget = new RosJointStatePublisher();
         });
 
         it("Dummy test", function () {

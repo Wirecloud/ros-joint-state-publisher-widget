@@ -6,140 +6,142 @@
  * Licensed under the Apache 2.0
  */
 
-var JOINTSTATEPUBLISHER = {
-  REVISION : '0.0.1'
-};
+/* globals ROSLIB */
 
-/** Replicating the joint_state_publisher node's functionality in the browser
- * @constructor
- * @param options - object with following keys:
- *   * ros - the ROSLIB.Ros connection handle
- *   * paramName - the parameter to read the robot description from
- *   * topicName - topic to publish joint states on
- *   * divID - the ID of the div to place the sliders
- *   *
- */
-JOINTSTATEPUBLISHER.JointStatePublisher = function JointStatePublisher(options) {
-  var that = this;
-  options = options || {};
-  var ros = options.ros;
-  var paramName = options.paramName || 'robot_description';
-  var topicName = options.topicName || '/web_joint_states';
-  var divID = options.divID || 'sliders';
+(function () {
 
-  var sliders = [];
+    "use strict";
 
-  var param = new ROSLIB.Param({
-    ros : ros,
-    name : paramName
-  });
-  param.get(loadModel);
+    /** Replicating the joint_state_publisher node's functionality in the browser
+     * @constructor
+     * @param options - object with following keys:
+     *   * ros - the ROSLIB.Ros connection handle
+     *   * paramName - the parameter to read the robot description from
+     *   * topicName - topic to publish joint states on
+     *   * divID - the ID of the div to place the sliders
+     *   *
+     */
+    var JointStatePublisher = function JointStatePublisher(options) {
+        options = options || {};
+        var ros = options.ros;
+        var paramName = options.paramName || 'robot_description';
+        var topicName = options.topicName || '/web_joint_states';
+        var divID = options.divID || 'sliders';
 
-  var topic = new ROSLIB.Topic({
-    ros : ros,
-    name : topicName,
-    messageType : 'sensor_msgs/JointState'
-  });
+        this.container = document.getElementById(divID);
+        this.sliders = [];
 
-  var updateInput = function(event) {
-    var name = event.target.name;
-    var target;
-    if( name.indexOf('_text') >= 0) {
-        target = name.replace('_text', '');
-    }else{
-        target = name + '_text';
-    }
-    document.getElementById(target).value = event.target.value;
-    publish();
-  };
+        var param = new ROSLIB.Param({
+            ros: ros,
+            name: paramName
+        });
+        param.get(this.loadModel.bind(this));
 
-  var loadModel = function(param) {
-    var parser = new DOMParser();
-    var xmlDoc = parser.parseFromString(param, 'text/xml');
+        this.topic = new ROSLIB.Topic({
+            ros: ros,
+            name: topicName,
+            messageType: 'sensor_msgs/JointState'
+        });
+    };
 
-    // See https://developer.mozilla.org/docs/XPathResult#Constants
-    var XPATH_FIRST_ORDERED_NODE_TYPE = 9;
+    JointStatePublisher.prototype.publish = function publish() {
+        var names = [];
+        var values = [];
+        for (var index = 0; index < this.sliders.length; index++) {
+            var slider = this.sliders[index];
+            names[ names.length ] = slider.name;
+            values[ values.length ] = parseFloat(slider.value);
+        }
 
-    var robotXml = xmlDoc.evaluate('//robot', xmlDoc, null, XPATH_FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-    var c = 0;
-    var container = document.getElementById(divID);
-    for (var nodes = robotXml.childNodes, i = 0; i < nodes.length; i++) {
-        var node = nodes[i];
-        if(node.tagName==='joint'){
-            if(node.getAttribute('type')!=='fixed'){
+        var js = new ROSLIB.Message({
+            name: names, position: values, velocity: [], effort: []
+        });
+        this.topic.publish(js);
+    };
 
-                var minval, maxval, val;
-                if(node.getAttribute('type')==='continuous'){
-                    minval = -3.1415;
-                    maxval = 3.1415;
-                    val = 0;
-                }else{
-                    var limit = node.getElementsByTagName('limit')[0];
-                    minval = parseFloat(limit.getAttribute('lower'));
-                    maxval = parseFloat(limit.getAttribute('upper'));
-                    if(minval <= 0 && maxval >= 0){
+    JointStatePublisher.prototype.updateInput = function updateInput(event) {
+        var name = event.target.name;
+        var target;
+        if (name.indexOf('_text') >= 0) {
+            target = name.replace('_text', '');
+        } else {
+            target = name + '_text';
+        }
+        document.getElementById(target).value = event.target.value;
+        this.publish();
+    };
+
+    JointStatePublisher.prototype.loadModel = function loadModel(param) {
+        var parser = new DOMParser();
+        var xmlDoc = parser.parseFromString(param, 'text/xml');
+
+        // See https://developer.mozilla.org/docs/XPathResult#Constants
+        var XPATH_FIRST_ORDERED_NODE_TYPE = 9;
+
+        var robotXml = xmlDoc.evaluate('//robot', xmlDoc, null, XPATH_FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+        for (var nodes = robotXml.childNodes, i = 0; i < nodes.length; i++) {
+            var node = nodes[i];
+            if (node.tagName === 'joint') {
+                if (node.getAttribute('type') !== 'fixed') {
+
+                    var minval, maxval, val;
+                    if (node.getAttribute('type') === 'continuous') {
+                        minval = -3.1415;
+                        maxval = 3.1415;
                         val = 0;
-                    }else{
-                        val = (maxval + minval) / 2;
+                    } else {
+                        var limit = node.getElementsByTagName('limit')[0];
+                        minval = parseFloat(limit.getAttribute('lower'));
+                        maxval = parseFloat(limit.getAttribute('upper'));
+                        if (minval <= 0 && maxval >= 0) {
+                            val = 0;
+                        } else {
+                            val = (maxval + minval) / 2;
+                        }
                     }
+
+                    var name = node.getAttribute('name');
+                    var x = document.createTextNode(name);
+                    this.container.appendChild(x);
+                    x = document.createElement('input');
+                    x.setAttribute('name', name + '_text');
+                    x.setAttribute('id', name + '_text');
+                    x.setAttribute('style', 'float: right');
+                    x.setAttribute('value', val);
+                    x.onblur = this.updateInput.bind(this);
+                    this.container.appendChild(x);
+                    this.container.appendChild(document.createElement('br'));
+
+                    x = document.createElement('input');
+                    x.setAttribute('name', name);
+                    x.setAttribute('id', name + '_slider');
+                    x.setAttribute('type', 'range');
+                    x.setAttribute('min', minval);
+                    x.setAttribute('max', maxval);
+                    x.setAttribute('value', val);
+                    x.setAttribute('step', (maxval - minval) / 100);
+                    x.setAttribute('style', 'width: 100%');
+                    x.onchange = this.updateInput.bind(this);
+                    this.container.appendChild(x);
+                    this.container.appendChild(document.createElement('br'));
+                    this.sliders[this.sliders.length] = x;
                 }
-
-                var name = node.getAttribute('name');
-                var x = document.createTextNode( name );
-                container.appendChild(x);
-                x = document.createElement('input');
-                x.setAttribute('name', name + '_text');
-                x.setAttribute('id', name + '_text');
-                x.setAttribute('style', 'float: right');
-                x.setAttribute('value', val);
-                x.onblur = updateInput;
-                container.appendChild(x);
-                container.appendChild( document.createElement('br') );
-
-                x = document.createElement('input');
-                x.setAttribute('name', name);
-                x.setAttribute('id', name + '_slider');
-                x.setAttribute('type', 'range');
-                x.setAttribute('min', minval);
-                x.setAttribute('max', maxval);
-                x.setAttribute('value', val);
-                x.setAttribute('step', (maxval-minval)/100);
-                x.setAttribute('style', 'width: 100%');
-                x.onchange = updateInput;
-                container.appendChild(x);
-                container.appendChild( document.createElement('br') );
-                sliders[ sliders.length ] = x;
             }
         }
-    }
-  };
+    };
 
-  function publish() {
-      var names = [];
-      var values = [];
-      for(var index = 0; index < sliders.length; index++) {
-        var slider = sliders[index];
-        names[ names.length ] = slider.name;
-        values[ values.length ] = parseFloat(slider.value);
-      }
+    window.onload = function () {
 
-      var js = new ROSLIB.Message({
-        name: names, position: values
-      });
-      topic.publish(js);
-  }
-};
+        var ros_bridge_url = MashupPlatform.prefs.get('ros_bridge_url');
 
-window.onload = function () {
+        var ros = new ROSLIB.Ros({
+            url: ros_bridge_url
+        });
 
-    var ros_bridge_url = MashupPlatform.prefs.get('ros_bridge_url');
+        new JointStatePublisher({
+            ros: ros,
+            divID: 'sliders'
+        });
+    };
 
-    var ros = new ROSLIB.Ros({
-      url : ros_bridge_url
-    });
-
-    var jsp = new JOINTSTATEPUBLISHER.JointStatePublisher({
-        ros : ros,
-        divID : 'sliders'
-    });
-};
+})();
