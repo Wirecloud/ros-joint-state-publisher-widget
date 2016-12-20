@@ -1,7 +1,7 @@
-My project name widget
+Joint State Publisher
 ======================
 
-The My project name widget is a WireCloud widget that provides ...
+The Joint State Publisher widget is a WireCloud widget that provides ...
 
 Build
 -----
@@ -41,31 +41,15 @@ grunt
 
 If everything goes well, you will find a wgt file in the `dist` folder.
 
-## Settings
+## Documentation
 
-`Write here the preferences`
-
-## Wiring
-
-
-### Input Endpoints
-
-`Write here the input wiring endpoints`
-
-
-### Output Endpoints
-
-
-`Write here the output wiring endpoints`
-
-## Usage
-
-
-## Reference
-
-- [FIWARE Mashup](https://mashup.lab.fiware.org/)
+Documentation about how to use this widget is available on the
+[User Guide](src/doc/userguide.md). Anyway, you can find general information
+about how to use widgets on the
+[WireCloud's User Guide](https://wirecloud.readthedocs.io/en/stable/user_guide/)
+available on Read the Docs.
 
 ## Copyright and License
 
-Copyright (c) 2016 CoNWeT, Universidad Politécnica de Madrid
-Licensed under the Apache, 2.0 licenses.
+Copyright (c) 2016 Vendor
+Licensed under the MIT license.
